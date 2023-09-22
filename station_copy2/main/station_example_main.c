@@ -9,6 +9,16 @@
 #include <sys/time.h>
 #include "esp_netif_sntp.h"
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include "esp_netif.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
+#include "freertos/queue.h"
+#include "freertos/timers.h"
+#include "oled_display.h"
+
 #define EXAMPLE_ESP_WIFI_SSID      "4tel_AP"
 #define EXAMPLE_ESP_WIFI_PASS      "aHp6KM7Y2j8QfTT6"
 #define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
@@ -139,6 +149,10 @@ void app_main(void)
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
+
+    // new oled display code
+    oled_init();
+    // end new oled display code
 
     while(1) {
         time_t now;
