@@ -1,0 +1,11 @@
+{
+    "idf.adapterTargetName": "esp32",
+    "idf.portWin": "COM3",
+    "idf.flashType": "UART",
+    "files.associations": {
+        "mqtt_connect.h": "c",
+        "wifi_connect.h": "c",
+        "oled_display.h": "c",
+        "font8x8_basic.h": "c"
+    }
+}
