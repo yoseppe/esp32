@@ -10,8 +10,6 @@
 #include <sys/time.h>
 #include "driver/gpio.h"
 
-
-
 #define CONFIG_SDA_GPIO 21
 #define CONFIG_SCL_GPIO 22
 #define CONFIG_RESET_GPIO 15
@@ -42,7 +40,7 @@ ssd1306_bitmaps(&dev, 0, 0, image_spyroLogo_6, 128, 64, false);
 	ssd1306_bitmaps(&dev, 0, 0, image_spyroLogo3, 128, 64, false);
 	vTaskDelay(10 / portTICK_PERIOD_MS);
 	ssd1306_bitmaps(&dev, 0, 0, image_spyroLogo4, 128, 64, false);
-			vTaskDelay(10 / portTICK_PERIOD_MS);
+	vTaskDelay(10 / portTICK_PERIOD_MS);
 	ssd1306_bitmaps(&dev, 0, 0, image_spyroLogo5, 128, 64, false);
 	vTaskDelay(10 / portTICK_PERIOD_MS);
 	ssd1306_bitmaps(&dev, 0, 0, image_spyroLogo6, 128, 64, false);
