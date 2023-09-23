@@ -4,6 +4,6 @@
 #include <stddef.h>
 
 void joystick_init(void);
-void startReadingStates();
+void joystick_startReadingStates();
 
 #endif

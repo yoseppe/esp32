@@ -21,7 +21,6 @@
 #include "joystick.h"
 #include "spyrosoftImages.h"
 
-
 #if CONFIG_ESP_WPA3_SAE_PWE_BOTH
 #define ESP_WIFI_SAE_MODE WPA3_SAE_PWE_BOTH
 #define EXAMPLE_H2E_IDENTIFIER CONFIG_ESP_WIFI_PW_ID
@@ -38,8 +37,6 @@
 #define EXAMPLE_ESP_WIFI_PASS      "aHp6KM7Y2j8QfTT6"
 #define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
 
-// static int adc_raw[2];
-// static int voltage[2][10];
 static const char *TAG = "wifi station";
 static int s_retry_num = 0;
 static EventGroupHandle_t s_wifi_event_group;
@@ -47,8 +44,6 @@ void time_sync_notification_cb(struct timeval *tv);
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 void wifi_init_sta(void);
 static void obtain_time(void);
-// static bool example_adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t atten, adc_cali_handle_t *out_handle);
-// static void example_adc_calibration_deinit(adc_cali_handle_t handle);
 
 void app_main(void)
 {
@@ -69,7 +64,7 @@ void app_main(void)
 
     //ADC
     joystick_init();
-        startReadingStates();
+    joystick_startReadingStates();
     //end ADC
 
     while(1) {

@@ -5,7 +5,6 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include <sys/time.h>
-//#include "driver/gpio.h"
 
 #include "soc/soc_caps.h"
 #include "esp_adc/adc_cali.h"
@@ -28,9 +27,7 @@ adc_oneshot_unit_handle_t adc1_handle;
 
 void joystick_init(void)
 {
-	//ADC
     //-------------ADC1 Init---------------//
-    
     adc_oneshot_unit_init_cfg_t init_config1 = {
         .unit_id = ADC_UNIT_1,
     };
@@ -45,11 +42,10 @@ void joystick_init(void)
 
     //-------------ADC1 Calibration Init---------------//
     adc_cali_handle_t adc1_cali_chan0_handle = NULL;
-    bool do_calibration1_chan0 = example_adc_calibration_init(ADC_UNIT_1, EXAMPLE_ADC1_CHAN0, EXAMPLE_ADC_ATTEN, &adc1_cali_chan0_handle);
-
-    
+    bool do_calibration1_chan0 = example_adc_calibration_init(ADC_UNIT_1, EXAMPLE_ADC1_CHAN0, EXAMPLE_ADC_ATTEN, &adc1_cali_chan0_handle);    
 }
-void startReadingStates(void) {
+
+void joystick_startReadingStates(void) {
     while (1) {
         ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
         //ESP_LOGI(TAG, "raw: %d", adc_raw[0]);
