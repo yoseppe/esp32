@@ -18,7 +18,6 @@
 
 SSD1306_t dev;
 uint8_t buff[1024];
-void spyrosoftLogo_scrollDown(void);
 
 void oled_init(void)
 {

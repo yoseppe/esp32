@@ -4,6 +4,7 @@
     "idf.portWin": "COM3",
     "files.associations": {
         "oled_display.h": "c",
-        "display_functionalities.h": "c"
+        "display_functionalities.h": "c",
+        "spyrosoftimages.h": "c"
     }
 }
