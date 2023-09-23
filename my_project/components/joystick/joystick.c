@@ -15,6 +15,7 @@
 
 #if CONFIG_IDF_TARGET_ESP32
 #define EXAMPLE_ADC1_CHAN0 ADC_CHANNEL_6
+#define EXAMPLE_ADC1_CHAN1 ADC_CHANNEL_7
 #define EXAMPLE_ADC_ATTEN ADC_ATTEN_DB_11
 #endif
 
@@ -41,35 +42,73 @@ void joystick_init(void)
         .atten = EXAMPLE_ADC_ATTEN,
     };
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN1, &config));
 
     //-------------ADC1 Calibration Init---------------//
     adc_cali_handle_t adc1_cali_chan0_handle = NULL;
-    bool do_calibration1_chan0 = example_adc_calibration_init(ADC_UNIT_1, EXAMPLE_ADC1_CHAN0, EXAMPLE_ADC_ATTEN, &adc1_cali_chan0_handle);    
+    adc_cali_handle_t adc1_cali_chan1_handle = NULL;
+    bool do_calibration1_chan0 = example_adc_calibration_init(ADC_UNIT_1, EXAMPLE_ADC1_CHAN0, EXAMPLE_ADC_ATTEN, &adc1_cali_chan0_handle);
+    bool do_calibration1_chan1 = example_adc_calibration_init(ADC_UNIT_1, EXAMPLE_ADC1_CHAN1, EXAMPLE_ADC_ATTEN, &adc1_cali_chan1_handle);
 }
 
 void joystick_startReadingStates(void) {
+    int cnt = 0;
     while (1) {
         ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
-        //ESP_LOGI(TAG, "raw: %d", adc_raw[0]);
-        if(adc_raw[0] <= 1000) {
-            ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
-            display_sendImage(image_leftArrow);
-            while(adc_raw[0] < 1500) {
-                ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
-                vTaskDelay(pdMS_TO_TICKS(50));
-            }
-            ESP_LOGI(TAG, "================================================================================centre");
-        }
-        else if(adc_raw[0] >= 3500) {
-            ESP_LOGI(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RIGHT");
-            display_sendImage(image_rightArrow);
-            while(adc_raw[0] < 1500 || adc_raw[0] > 2500) {
-                ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
-                vTaskDelay(pdMS_TO_TICKS(50));
-            }
-            ESP_LOGI(TAG, "================================================================================centre");
+        ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN1, &adc_raw[1]));
+        
+        //ESP_LOGI(TAG, "raw X: %d", adc_raw[0]);
+        //ESP_LOGI(TAG, "raw Y: %d", adc_raw[1]);
+        //ESP_LOGI(TAG, "cnt = %d", cnt);
+
+        if(cnt > 40) {
+            display_sendImage(image_spyroLogo9);
+            cnt = 0;
         } else {
-            vTaskDelay(pdMS_TO_TICKS(50));
+            if(adc_raw[0] <= 1000) {
+                cnt = 0;
+                ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
+                display_sendImage(image_leftArrow);
+                while(adc_raw[0] < 1500) {
+                    ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
+                    vTaskDelay(pdMS_TO_TICKS(50));
+                }
+                ESP_LOGI(TAG, "================================================================================centre");
+            }
+            else if(adc_raw[0] >= 3500) {
+                cnt = 0;
+                ESP_LOGI(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RIGHT");
+                display_sendImage(image_rightArrow);
+                while(adc_raw[0] < 1500 || adc_raw[0] > 2500) {
+                    ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
+                    vTaskDelay(pdMS_TO_TICKS(50));
+                }
+                ESP_LOGI(TAG, "================================================================================centre");
+            }
+            else if(adc_raw[1] <= 500) {
+                cnt = 0;
+                ESP_LOGI(TAG, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^UP");
+                display_sendImage(image_upArrow);
+                while(adc_raw[1] < 1500 || adc_raw[1] > 2500) {
+                    ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN1, &adc_raw[1]));
+                    vTaskDelay(pdMS_TO_TICKS(50));
+                }
+                ESP_LOGI(TAG, "================================================================================centre");
+            }
+            else if(adc_raw[1] >= 4000) {
+                cnt = 0;
+                ESP_LOGI(TAG, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||DOWN");
+                display_sendImage(image_downArrow);
+                while(adc_raw[1] < 1500 || adc_raw[1] > 2500) {
+                    ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN1, &adc_raw[1]));
+                    vTaskDelay(pdMS_TO_TICKS(50));
+                }
+                ESP_LOGI(TAG, "================================================================================centre");
+            }
+            else {
+                vTaskDelay(pdMS_TO_TICKS(50));
+                cnt++;
+            }
         }
     }
 }

@@ -57,7 +57,7 @@ void app_main(void)
     wifi_init_sta();
 
     oled_init();
-    // display_sendImage(image_printingTimeInESPLOGI);
+    display_sendImage(image_spyroLogo9);
 
     joystick_init();
     joystick_startReadingStates();
