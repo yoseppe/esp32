@@ -18,7 +18,7 @@
 #include "freertos/queue.h"
 #include "freertos/timers.h"
 #include "oled_display.h"
-#include "ssd1306.h"
+//#include "ssd1306.h"
 #include "spyrosoftImages.h"
 
 #include "soc/soc_caps.h"
@@ -106,7 +106,7 @@ void app_main(void)
             }
             ESP_LOGI(TAG, "================================================================================centre");
         }
-        else if(adc_raw[0] >= 4000) {
+        else if(adc_raw[0] >= 3500) {
             ESP_LOGI(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RIGHT");
             while(adc_raw[0] < 1500 || adc_raw[0] > 2500) {
                 ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
