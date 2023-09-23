@@ -18,7 +18,6 @@
 #include "freertos/queue.h"
 #include "freertos/timers.h"
 #include "oled_display.h"
-//#include "ssd1306.h"
 #include "spyrosoftImages.h"
 
 #include "soc/soc_caps.h"
