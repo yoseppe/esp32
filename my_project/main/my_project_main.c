@@ -18,26 +18,18 @@
 #include "freertos/queue.h"
 #include "freertos/timers.h"
 #include "oled_display.h"
+#include "ssd1306.h"
+#include "spyrosoftImages.h"
 
 #include "soc/soc_caps.h"
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 #include "esp_adc/adc_oneshot.h"
 
-static int adc_raw[2][10];
-static int voltage[2][10];
-static bool example_adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t atten, adc_cali_handle_t *out_handle);
-static void example_adc_calibration_deinit(adc_cali_handle_t handle);
-
 #if CONFIG_IDF_TARGET_ESP32
 #define EXAMPLE_ADC1_CHAN0 ADC_CHANNEL_6
-#define EXAMPLE_ADC_ATTEN           ADC_ATTEN_DB_11
+#define EXAMPLE_ADC_ATTEN ADC_ATTEN_DB_11
 #endif
-
-#define EXAMPLE_ESP_WIFI_SSID      "4tel_AP"
-#define EXAMPLE_ESP_WIFI_PASS      "aHp6KM7Y2j8QfTT6"
-#define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
-
 #if CONFIG_ESP_WPA3_SAE_PWE_BOTH
 #define ESP_WIFI_SAE_MODE WPA3_SAE_PWE_BOTH
 #define EXAMPLE_H2E_IDENTIFIER CONFIG_ESP_WIFI_PW_ID
@@ -48,16 +40,107 @@ static void example_adc_calibration_deinit(adc_cali_handle_t handle);
 #define ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA2_PSK
 #endif
 
-static EventGroupHandle_t s_wifi_event_group;
-
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
+#define EXAMPLE_ESP_WIFI_SSID      "4tel_AP"
+#define EXAMPLE_ESP_WIFI_PASS      "aHp6KM7Y2j8QfTT6"
+#define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
 
+static int adc_raw[2];
+static int voltage[2][10];
 static const char *TAG = "wifi station";
-
 static int s_retry_num = 0;
-
+static EventGroupHandle_t s_wifi_event_group;
+void time_sync_notification_cb(struct timeval *tv);
+static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
+void wifi_init_sta(void);
 static void obtain_time(void);
+static bool example_adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t atten, adc_cali_handle_t *out_handle);
+static void example_adc_calibration_deinit(adc_cali_handle_t handle);
+
+void app_main(void)
+{
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      ESP_ERROR_CHECK(nvs_flash_erase());
+      ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
+    wifi_init_sta();
+
+    // new oled display code
+    oled_init();
+    //spyrosoftLogo_scrollDown();
+    display_sendImage(image_printingTimeInESPLOGI);
+    // end new oled display code
+
+    //ADC
+    //-------------ADC1 Init---------------//
+    adc_oneshot_unit_handle_t adc1_handle;
+    adc_oneshot_unit_init_cfg_t init_config1 = {
+        .unit_id = ADC_UNIT_1,
+    };
+    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config1, &adc1_handle));
+
+    //-------------ADC1 Config---------------//
+    adc_oneshot_chan_cfg_t config = {
+        .bitwidth = ADC_BITWIDTH_DEFAULT,
+        .atten = EXAMPLE_ADC_ATTEN,
+    };
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
+
+    //-------------ADC1 Calibration Init---------------//
+    adc_cali_handle_t adc1_cali_chan0_handle = NULL;
+    bool do_calibration1_chan0 = example_adc_calibration_init(ADC_UNIT_1, EXAMPLE_ADC1_CHAN0, EXAMPLE_ADC_ATTEN, &adc1_cali_chan0_handle);
+
+    while (1) {
+        ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
+        //ESP_LOGI(TAG, "raw: %d", adc_raw[0]);
+        if(adc_raw[0] <= 1000) {
+            ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
+            while(adc_raw[0] < 1500) {
+                ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
+                vTaskDelay(pdMS_TO_TICKS(50));
+            }
+            ESP_LOGI(TAG, "================================================================================centre");
+        }
+        else if(adc_raw[0] >= 4000) {
+            ESP_LOGI(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RIGHT");
+            while(adc_raw[0] < 1500 || adc_raw[0] > 2500) {
+                ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
+                vTaskDelay(pdMS_TO_TICKS(50));
+            }
+            ESP_LOGI(TAG, "================================================================================centre");
+        } else {
+            vTaskDelay(pdMS_TO_TICKS(50));
+        }
+    }
+    //end ADC
+
+    while(1) {
+        time_t now;
+        struct tm timeinfo;
+        time(&now);
+        localtime_r(&now, &timeinfo);
+        if (timeinfo.tm_year < (2016 - 1900)) {
+            ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
+            obtain_time();
+            time(&now);
+        }
+
+        // Set timezone to Zagreb time and print it
+        char strftime_buf[64];
+        setenv("TZ", "GMT-2", 1);
+        tzset();
+        localtime_r(&now, &timeinfo);
+        strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+        ESP_LOGI(TAG, "The current date/time in Zagreb is: %s", strftime_buf);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
+
+}
 
 void time_sync_notification_cb(struct timeval *tv)
 {
@@ -151,86 +234,6 @@ void wifi_init_sta(void)
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
-}
-
-void app_main(void)
-{
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
-    wifi_init_sta();
-
-    // new oled display code
-    //oled_init();
-    // end new oled display code
-
-    //ADC
-    //-------------ADC1 Init---------------//
-    adc_oneshot_unit_handle_t adc1_handle;
-    adc_oneshot_unit_init_cfg_t init_config1 = {
-        .unit_id = ADC_UNIT_1,
-    };
-    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config1, &adc1_handle));
-
-    //-------------ADC1 Config---------------//
-    adc_oneshot_chan_cfg_t config = {
-        .bitwidth = ADC_BITWIDTH_DEFAULT,
-        .atten = EXAMPLE_ADC_ATTEN,
-    };
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, EXAMPLE_ADC1_CHAN0, &config));
-
-    //-------------ADC1 Calibration Init---------------//
-    adc_cali_handle_t adc1_cali_chan0_handle = NULL;
-    adc_cali_handle_t adc1_cali_chan1_handle = NULL;
-    bool do_calibration1_chan0 = example_adc_calibration_init(ADC_UNIT_1, EXAMPLE_ADC1_CHAN0, EXAMPLE_ADC_ATTEN, &adc1_cali_chan0_handle);
-
-    while (1) {
-        ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0][0]));
-        //ESP_LOGI(TAG, "ADC%d Channel[%d] Raw Data: %d", ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN0, adc_raw[0][0]);
-        /*if (do_calibration1_chan0) {
-            ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_chan0_handle, adc_raw[0][0], &voltage[0][0]));
-            ESP_LOGI(TAG, "ADC%d Channel[%d] Cali Voltage: %d mV", ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN0, voltage[0][0]);
-        }*/
-        if(adc_raw[0][0] <= 1) {
-            ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
-        if(adc_raw[0][0] >= 4094) {
-            ESP_LOGI(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RIGHT");
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
-
-        vTaskDelay(pdMS_TO_TICKS(100));
-
-    }
-    //end ADC
-
-    while(1) {
-        time_t now;
-        struct tm timeinfo;
-        time(&now);
-        localtime_r(&now, &timeinfo);
-        if (timeinfo.tm_year < (2016 - 1900)) {
-            ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
-            obtain_time();
-            time(&now);
-        }
-
-        // Set timezone to Zagreb time and print it
-        char strftime_buf[64];
-        setenv("TZ", "GMT-2", 1);
-        tzset();
-        localtime_r(&now, &timeinfo);
-        strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-        ESP_LOGI(TAG, "The current date/time in Zagreb is: %s", strftime_buf);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-    }
-
 }
 
 static void obtain_time(void)
