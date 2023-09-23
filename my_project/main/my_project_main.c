@@ -53,19 +53,14 @@ void app_main(void)
       ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
+
     wifi_init_sta();
 
-    // new oled display code
     oled_init();
-    //spyrosoftLogo_scrollDown();
-    display_sendImage(image_printingTimeInESPLOGI);
-    // end new oled display code
+    // display_sendImage(image_printingTimeInESPLOGI);
 
-    //ADC
     joystick_init();
     joystick_startReadingStates();
-    //end ADC
 
     while(1) {
         time_t now;
@@ -120,6 +115,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 
 void wifi_init_sta(void)
 {
+    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     s_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
@@ -224,4 +220,3 @@ static void obtain_time(void)
     time(&now);
     localtime_r(&now, &timeinfo);
 }
-

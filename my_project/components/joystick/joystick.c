@@ -5,6 +5,8 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include <sys/time.h>
+#include "oled_display.h"
+#include "spyrosoftImages.h"
 
 #include "soc/soc_caps.h"
 #include "esp_adc/adc_cali.h"
@@ -51,6 +53,7 @@ void joystick_startReadingStates(void) {
         //ESP_LOGI(TAG, "raw: %d", adc_raw[0]);
         if(adc_raw[0] <= 1000) {
             ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
+            display_sendImage(image_leftArrow);
             while(adc_raw[0] < 1500) {
                 ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
                 vTaskDelay(pdMS_TO_TICKS(50));
@@ -59,6 +62,7 @@ void joystick_startReadingStates(void) {
         }
         else if(adc_raw[0] >= 3500) {
             ESP_LOGI(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RIGHT");
+            display_sendImage(image_rightArrow);
             while(adc_raw[0] < 1500 || adc_raw[0] > 2500) {
                 ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
                 vTaskDelay(pdMS_TO_TICKS(50));
