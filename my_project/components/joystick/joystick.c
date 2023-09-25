@@ -34,24 +34,92 @@ static void example_adc_calibration_deinit(adc_cali_handle_t handle);
 adc_oneshot_unit_handle_t adc1_handle;
 
 enum inputs {
-    INPUT_PUSH_BUTTON = 0,
-    INPUT_UP_ARROW = 1,
-    INPUT_DOWN_ARROW = 2,
-    INPUT_RIGHT_ARROW = 3,
-    INPUT_LEFT_ARROW = 4
+    INPUT_PUSH_BUTTON,
+    INPUT_UP_ARROW,
+    INPUT_DOWN_ARROW,
+    INPUT_RIGHT_ARROW,
+    INPUT_LEFT_ARROW,
 };
 
 enum menuSelectedItem {
-    MENU_ITEM_1 = 0,
-    MENU_ITEM_2 = 1,
-    MENU_ITEM_3 = 2,
-    MENU_ITEM_4 = 3
+    MENU_ITEM_1,
+    MENU_ITEM_2,
+    MENU_ITEM_3,
+    MENU_ITEM_4,
+    STATE_TIME,
+    STATE_TEMPERATURE,
+    STATE_3,
+    STATE_4
 };
 
 enum menuSelectedItem currentlySelectedItem = MENU_ITEM_1;
 
-void handler(int input) {
+void enterState_TIME(void) {
+    display_sendImage(image_FERLogo);
+}
+
+void enterState_TEMPERATURE(void) {
+    display_sendImage(image_spyroLogo9);
+}
+
+void enterState_3(void) {
+    display_sendImage(image_spyroLogo7);
+}
+
+void enterState_4(void) {
+    display_sendImage(image_spyroLogo11);
+}
+
+void inputHandler(int input) {
+    if (input == INPUT_PUSH_BUTTON) {
+        //display_sendImage(image_buttonPushed);
+        //vTaskDelay(pdMS_TO_TICKS(100));
+        switch(currentlySelectedItem) {
+            case MENU_ITEM_1:
+                enterState_TIME();
+                currentlySelectedItem = STATE_TIME;
+            break;
+            case MENU_ITEM_2:
+                enterState_TEMPERATURE();
+                currentlySelectedItem = STATE_TEMPERATURE;
+            break;
+            case MENU_ITEM_3:
+                enterState_3();
+                currentlySelectedItem = STATE_3;
+            break;
+            case MENU_ITEM_4:
+                enterState_4();
+                currentlySelectedItem = STATE_4;
+            break;
+            default:
+            break;
+        }
+    }
     switch(currentlySelectedItem) {
+        case STATE_TIME:
+            if (input == INPUT_LEFT_ARROW) {
+                display_sendImage(image_menuItem1Selected);
+                currentlySelectedItem = MENU_ITEM_1;
+            }
+        break;
+        case STATE_TEMPERATURE:
+            if (input == INPUT_LEFT_ARROW) {
+                display_sendImage(image_menuItem2Selected);
+                currentlySelectedItem = MENU_ITEM_2;
+            }
+        break;
+        case STATE_3:
+            if (input == INPUT_LEFT_ARROW) {
+                display_sendImage(image_menuItem3Selected);
+                currentlySelectedItem = MENU_ITEM_3;
+            }
+        break;
+        case STATE_4:
+            if (input == INPUT_LEFT_ARROW) {
+                display_sendImage(image_menuItem4Selected);
+                currentlySelectedItem = MENU_ITEM_4;
+            }
+        break;
         case MENU_ITEM_1:
             switch(input) {
                 case INPUT_DOWN_ARROW:
@@ -160,7 +228,7 @@ void joystick_startReadingStates(void) {
                 cnt = 0;
                 ESP_LOGI(TAG, "oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobuttonPUSH");
                 //display_sendImage(image_buttonPushed);
-                handler(INPUT_PUSH_BUTTON);
+                inputHandler(INPUT_PUSH_BUTTON);
                 while(gpio_get_level(PUSH_BUTTON_GPIO) != 1) {
                     vTaskDelay(pdMS_TO_TICKS(50));
                 }
@@ -170,7 +238,7 @@ void joystick_startReadingStates(void) {
                 cnt = 0;
                 ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
                 //display_sendImage(image_leftArrow);
-                handler(INPUT_LEFT_ARROW);
+                inputHandler(INPUT_LEFT_ARROW);
                 while(adc_raw[0] < 1500) {
                     ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
                     vTaskDelay(pdMS_TO_TICKS(50));
@@ -181,7 +249,7 @@ void joystick_startReadingStates(void) {
                 cnt = 0;
                 ESP_LOGI(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RIGHT");
                 //display_sendImage(image_rightArrow);
-                handler(INPUT_RIGHT_ARROW);
+                inputHandler(INPUT_RIGHT_ARROW);
                 while(adc_raw[0] < 1500 || adc_raw[0] > 2500) {
                     ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0]));
                     vTaskDelay(pdMS_TO_TICKS(50));
@@ -192,7 +260,7 @@ void joystick_startReadingStates(void) {
                 cnt = 0;
                 ESP_LOGI(TAG, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^UP");
                 //display_sendImage(image_upArrow);
-                handler(INPUT_UP_ARROW);
+                inputHandler(INPUT_UP_ARROW);
                 while(adc_raw[1] < 1500 || adc_raw[1] > 2500) {
                     ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN1, &adc_raw[1]));
                     vTaskDelay(pdMS_TO_TICKS(50));
@@ -203,7 +271,7 @@ void joystick_startReadingStates(void) {
                 cnt = 0;
                 ESP_LOGI(TAG, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||DOWN");
                 //display_sendImage(image_downArrow);
-                handler(INPUT_DOWN_ARROW);
+                inputHandler(INPUT_DOWN_ARROW);
                 while(adc_raw[1] < 1500 || adc_raw[1] > 2500) {
                     ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN1, &adc_raw[1]));
                     vTaskDelay(pdMS_TO_TICKS(50));
