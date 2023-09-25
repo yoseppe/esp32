@@ -57,7 +57,7 @@ void app_main(void)
     wifi_init_sta();
 
     oled_init();
-    display_sendImage(image_spyroLogo9);
+    display_sendImage(image_menuItem1Selected);
 
     joystick_init();
     joystick_startReadingStates();
