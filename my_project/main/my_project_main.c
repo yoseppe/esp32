@@ -33,8 +33,8 @@
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
-#define EXAMPLE_ESP_WIFI_SSID      "4tel_AP"
-#define EXAMPLE_ESP_WIFI_PASS      "aHp6KM7Y2j8QfTT6"
+#define EXAMPLE_ESP_WIFI_SSID      "Josip P30"
+#define EXAMPLE_ESP_WIFI_PASS      "sipjoicgrg"
 #define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
 
 static const char *TAG = "wifi station";

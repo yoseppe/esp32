@@ -13,6 +13,11 @@
 #include "esp_adc/adc_cali_scheme.h"
 #include "esp_adc/adc_oneshot.h"
 
+#include "driver/gpio.h"
+#include "sdkconfig.h"
+
+#define PUSH_BUTTON_GPIO GPIO_NUM_5
+
 #if CONFIG_IDF_TARGET_ESP32
 #define EXAMPLE_ADC1_CHAN0 ADC_CHANNEL_6
 #define EXAMPLE_ADC1_CHAN1 ADC_CHANNEL_7
@@ -30,6 +35,12 @@ adc_oneshot_unit_handle_t adc1_handle;
 
 void joystick_init(void)
 {
+    // PUSH BUTTON CONFIG
+    gpio_reset_pin(PUSH_BUTTON_GPIO);
+    gpio_set_direction(PUSH_BUTTON_GPIO, GPIO_MODE_INPUT);
+
+    // END PUSH BUTTON CONFIG
+
     //-------------ADC1 Init---------------//
     adc_oneshot_unit_init_cfg_t init_config1 = {
         .unit_id = ADC_UNIT_1,
@@ -65,7 +76,16 @@ void joystick_startReadingStates(void) {
             display_sendImage(image_spyroLogo9);
             cnt = 0;
         } else {
-            if(adc_raw[0] <= 1000) {
+            if(gpio_get_level(PUSH_BUTTON_GPIO) == 0) {
+                cnt = 0;
+                ESP_LOGI(TAG, "oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobuttonPUSH");
+                display_sendImage(image_buttonPushed);
+                while(gpio_get_level(PUSH_BUTTON_GPIO) != 1) {
+                    vTaskDelay(pdMS_TO_TICKS(50));
+                }
+                ESP_LOGI(TAG, "================================================================================centre");
+            }
+            else if(adc_raw[0] <= 1000) {
                 cnt = 0;
                 ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
                 display_sendImage(image_leftArrow);
