@@ -6,8 +6,8 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
-#include <sys/time.h>
-#include "esp_netif_sntp.h"
+//#include <sys/time.h>
+//#include "esp_netif_sntp.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -40,10 +40,10 @@
 static const char *TAG = "wifi station";
 static int s_retry_num = 0;
 static EventGroupHandle_t s_wifi_event_group;
-void time_sync_notification_cb(struct timeval *tv);
-static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 void wifi_init_sta(void);
-static void obtain_time(void);
+static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
+/*void time_sync_notification_cb(struct timeval *tv);
+static void obtain_time(void);*/
 
 void app_main(void)
 {
@@ -57,12 +57,12 @@ void app_main(void)
     wifi_init_sta();
 
     oled_init();
-    display_sendImage(image_menuItem1Selected);
+    //display_sendImage(image_menuItem1Selected);
 
     joystick_init();
     joystick_startReadingStates();
 
-    while(1) {
+    /*while(1) {
         time_t now;
         struct tm timeinfo;
         time(&now);
@@ -81,14 +81,14 @@ void app_main(void)
         strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
         ESP_LOGI(TAG, "The current date/time in Zagreb is: %s", strftime_buf);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
-    }
+    }*/
 
 }
 
-void time_sync_notification_cb(struct timeval *tv)
+/*void time_sync_notification_cb(struct timeval *tv)
 {
     ESP_LOGI(TAG, "Notification of a time synchronization event");
-}
+}*/
 
 
 static void event_handler(void* arg, esp_event_base_t event_base,
@@ -180,7 +180,7 @@ void wifi_init_sta(void)
     }
 }
 
-static void obtain_time(void)
+/*static void obtain_time(void)
 {
 
 #if LWIP_DHCP_GET_NTP_SRV
@@ -219,4 +219,4 @@ static void obtain_time(void)
     }
     time(&now);
     localtime_r(&now, &timeinfo);
-}
+}*/

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
@@ -19,6 +20,8 @@
 SSD1306_t dev;
 uint8_t buff[1024];
 
+void display_sendImage(uint8_t * image, bool invertImages);
+
 void oled_init(void)
 {
 	i2c_master_init(&dev, CONFIG_SDA_GPIO, CONFIG_SCL_GPIO, CONFIG_RESET_GPIO);
@@ -26,27 +29,18 @@ void oled_init(void)
     ssd1306_clear_screen(&dev, false);
 	ssd1306_contrast(&dev, 0xff);
 
+	display_sendImage(image_menuItem1Selected, false);
 	//gpio_reset_pin(14);	
 	//gpio_set_direction(14, GPIO_MODE_INPUT);
 	//gpio_set_pull_mode(14, GPIO_PULLUP_ENABLE);
-	//while(1) {
-		// if(gpio_get_level(14) == 0) {
-		// 	ESP_LOGI(tag, "11111111111111111111111111111111111111111111111111111111111111111111111111111111");
-		// 	ssd1306_bitmaps(&dev, 0, 0, image_spyroLogo11, 128, 64, false);
-		// 	vTaskDelay(100 / portTICK_PERIOD_MS);
-			
-		// } else {
-		// 	ESP_LOGI(tag, "00000000000000000000000000000000000000000000000000000000000000000000000000000000");
-		// 	ssd1306_bitmaps(&dev, 0, 0, image_spyroLogo19, 128, 64, false);
-		// 	vTaskDelay(100 / portTICK_PERIOD_MS);
-		// }
-	//spyrosoftLogo_scrollDown();
-	//ssd1306_bitmaps(&dev, 0, 0, image_printingTimeInESPLOGI, 128, 64, false);
-	//}
 }
 
-void display_sendImage(uint8_t * image) {
-	ssd1306_bitmaps(&dev, 0, 0, image, 128, 64, false);
+void display_sendChar(uint8_t * image, bool invertImages, int xpos, int ypos, int width, int height) {
+	ssd1306_bitmaps(&dev, xpos, ypos, image, width, height, invertImages);
+}
+
+void display_sendImage(uint8_t * image, bool invertImages) {
+	ssd1306_bitmaps(&dev, 0, 0, image, 128, 64, invertImages);
 }
 
 void spyrosoftLogo_scrollDown(void) {
