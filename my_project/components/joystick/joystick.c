@@ -17,6 +17,8 @@
 #include "driver/gpio.h"
 #include "sdkconfig.h"
 
+#include "temp_sensor.h"
+
 static const char *TAG = "JOYSTICK";
 
 #define PUSH_BUTTON_GPIO GPIO_NUM_5
@@ -186,7 +188,10 @@ void enterState_TIME(void) {
 }
 
 void enterState_TEMPERATURE(void) {
-    display_sendImage(image_spyroLogo9, invertImages);
+    display_sendImage(image_blank, invertImages);
+    float temp = temp_sensor_getTemperature();
+    display_sendNumber( ((int)temp) / 10, invertImages, 30, 30, 8, 8);
+    display_sendNumber( ((int)temp) % 10, invertImages, 37, 30, 8, 8);
 }
 
 void enterState_3(void) {

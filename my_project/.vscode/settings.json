@@ -5,6 +5,7 @@
     "files.associations": {
         "oled_display.h": "c",
         "display_functionalities.h": "c",
-        "spyrosoftimages.h": "c"
+        "spyrosoftimages.h": "c",
+        "temp_sensor.h": "c"
     }
 }

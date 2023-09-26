@@ -20,6 +20,7 @@
 #include "oled_display.h"
 #include "joystick.h"
 #include "spyrosoftImages.h"
+#include "temp_sensor.h"
 
 #if CONFIG_ESP_WPA3_SAE_PWE_BOTH
 #define ESP_WIFI_SAE_MODE WPA3_SAE_PWE_BOTH
@@ -59,8 +60,13 @@ void app_main(void)
     oled_init();
     //display_sendImage(image_menuItem1Selected);
 
-    joystick_init();
-    joystick_startReadingStates();
+    temp_sensor_init();
+
+    float temp = temp_sensor_getTemperature();
+    ESP_LOGI(TAG, "temp = %f", temp);
+
+    //joystick_init();
+    //joystick_startReadingStates();
 
     /*while(1) {
         time_t now;
