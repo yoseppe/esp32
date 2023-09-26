@@ -1,12 +1,13 @@
 {
     "idf.adapterTargetName": "esp32",
     "idf.flashType": "UART",
-    "idf.portWin": "COM5",
+    "idf.portWin": "COM3",
     "files.associations": {
         "oled_display.h": "c",
         "display_functionalities.h": "c",
         "spyrosoftimages.h": "c",
         "temp_sensor.h": "c",
-        "ssd1306.h": "c"
+        "ssd1306.h": "c",
+        "fonts.h": "c"
     }
 }

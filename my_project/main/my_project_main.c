@@ -20,7 +20,6 @@
 #include "oled_display.h"
 #include "joystick.h"
 #include "spyrosoftImages.h"
-#include "temp_sensor.h"
 
 #if CONFIG_ESP_WPA3_SAE_PWE_BOTH
 #define ESP_WIFI_SAE_MODE WPA3_SAE_PWE_BOTH
@@ -59,6 +58,12 @@ void app_main(void)
 
     oled_init();
     display_sendImage(image_menuItem1Selected, false);
+    //image_test128x64square
+    /*display_sendImage(image_test128x64square, false);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    display_sendImage(image_test130x64square, false);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    display_sendImage(image_test132x64square, false);*/
 
     //temp_sensor_init();
 

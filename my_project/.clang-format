@@ -1,0 +1,38 @@
+---
+Language: C
+# BasedOnStyle can be set to one of the following styles:
+# LLVM, Google, Chromium, Mozilla, WebKit
+BasedOnStyle: Google
+
+# Indentation
+IndentWidth: 4
+UseTab: Never
+TabWidth: 4
+
+# Column limit (80 is just an example, you can adjust it)
+ColumnLimit: 80
+
+# Spaces before and after various operators
+SpacesInParentheses: false
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpaceBeforeAssignmentOperators: true
+SpaceAfterControlStatementKeyword: true
+SpaceBeforeCpp11BracedList: false
+
+# Pointer and reference alignment
+AlignPointer: Left
+AlignReference: Left
+
+# Indent case labels within a switch
+IndentCaseLabels: true
+
+# Wrapping options
+BreakBeforeBraces: Allman
+AllowShortBlocksOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+
+# Other options
+DerivePointerAlignment: false
+BreakBeforeBinaryOperators: None
+AllowAllParametersOfDeclarationOnNextLine: true

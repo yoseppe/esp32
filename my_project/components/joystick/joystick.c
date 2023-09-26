@@ -14,13 +14,17 @@
 #include "esp_adc/adc_cali_scheme.h"
 #include "esp_adc/adc_oneshot.h"
 
+#include "fonts.h"
+
 #include "driver/gpio.h"
 #include "sdkconfig.h"
 
-#include "temp_sensor.h"
+//#include "temp_sensor.h"
+#include "v2.h"
 
 static const char *TAG = "JOYSTICK";
 
+#define TEMP_SENSOR_GPIO GPIO_NUM_19
 #define PUSH_BUTTON_GPIO GPIO_NUM_5
 #define PHYSICAL_SWITCH_GPIO GPIO_NUM_18
 
@@ -33,7 +37,6 @@ static const char *TAG = "JOYSTICK";
 //=============================================================================================
 //=====================TIME INJECTED FROM MAIN=================================================
 //=============================================================================================
-#include <sys/time.h>
 #include "esp_netif_sntp.h"
 void time_sync_notification_cb(struct timeval *tv);
 static void obtain_time(void);
@@ -134,72 +137,106 @@ enum menuSelectedItem currentlySelectedItem = MENU_ITEM_1;
 bool invertImages = false;
 
 void display_sendNumber(int num, bool invertImages, int xpos, int ypos, int width, int height) {
-    switch(num) {
-        case 0:
-        display_sendChar(image_number0, invertImages, xpos, ypos, width, height);
-        break;
-        case 1:
-        display_sendChar(image_number1, invertImages, xpos, ypos, width, height);
-        break;
-        case 2:
-        display_sendChar(image_number2, invertImages, xpos, ypos, width, height);
-        break;
-        case 3:
-        display_sendChar(image_number3, invertImages, xpos, ypos, width, height);
-        break;
-        case 4:
-        display_sendChar(image_number4, invertImages, xpos, ypos, width, height);
-        break;
-        case 5:
-        display_sendChar(image_number5, invertImages, xpos, ypos, width, height);
-        break;
-        case 6:
-        display_sendChar(image_number6, invertImages, xpos, ypos, width, height);
-        break;
-        case 7:
-        display_sendChar(image_number7, invertImages, xpos, ypos, width, height);
-        break;
-        case 8:
-        display_sendChar(image_number8, invertImages, xpos, ypos, width, height);
-        break;
-        case 9:
-        display_sendChar(image_number9, invertImages, xpos, ypos, width, height);
-        break;
-        default:
-        break;
-    }
+    display_sendChar(&console_font_8x8[(0x30+num)*8], invertImages, xpos, ypos, width, height);
+}
+
+void display_sendLetter(char letter, bool invertImages, int xpos, int ypos, int width, int height) {
+    display_sendChar(&console_font_8x8[(0x41+letter)*8], invertImages, xpos, ypos, width, height);
 }
 
 void enterState_TIME(void) {
     updateTime();
     ESP_LOGI(TAG, "The current date/time in Zagreb is: %s", strftime_buf);
-    ESP_LOGI(TAG, "Hours: %d", timeinfo.tm_hour);
-    ESP_LOGI(TAG, "Minutes: %d", timeinfo.tm_min);
-    ESP_LOGI(TAG, "Seconds: %d", timeinfo.tm_sec);
+
+    int hour = timeinfo.tm_hour;
+    int min = timeinfo.tm_min;
+    int sec = timeinfo.tm_sec;
+    int day = timeinfo.tm_mday;
+    int month = timeinfo.tm_mon;
+    int year = timeinfo.tm_year;
+
+    ESP_LOGI(TAG, "Hours: %d", hour);
+    ESP_LOGI(TAG, "Minutes: %d", min);
+    ESP_LOGI(TAG, "Seconds: %d", sec);
+    ESP_LOGI(TAG, "Day: %d", day);
+    ESP_LOGI(TAG, "Month: %d", month);
+    ESP_LOGI(TAG, "Year: %d", year);
+
 
     display_sendImage(image_blank, invertImages);
 
-    display_sendNumber(timeinfo.tm_hour / 10, invertImages, 30, 30, 8, 8);
-    display_sendNumber(timeinfo.tm_hour % 10, invertImages, 37, 30, 8, 8);
-    display_sendNumber(timeinfo.tm_min / 10, invertImages, 57, 30, 8, 8);
-    display_sendNumber(timeinfo.tm_min % 10, invertImages, 64, 30, 8, 8);
-    display_sendNumber(timeinfo.tm_sec / 10, invertImages, 84, 30, 8, 8);
-    display_sendNumber(timeinfo.tm_sec % 10, invertImages, 91, 30, 8, 8);
+    display_sendNumber(day / 10, invertImages, 20, 10, 8, 8);
+    display_sendNumber(day % 10, invertImages, 28, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('.')*8], invertImages, 36, 10, 8, 8);
+    display_sendNumber(month / 10, invertImages, 44, 10, 8, 8);
+    display_sendNumber(month % 10, invertImages, 52, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('.')*8], invertImages, 60, 10, 8, 8);
+    display_sendNumber(2, invertImages, 68, 10, 8, 8);
+    display_sendNumber(0, invertImages, 76, 10, 8, 8);
+    display_sendNumber(2, invertImages, 84, 10, 8, 8);
+    display_sendNumber(3, invertImages, 92, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('.')*8], invertImages, 100, 10, 8, 8);
+
+    display_sendNumber(hour / 10, invertImages, 30, 30, 8, 8);
+    display_sendNumber(hour % 10, invertImages, 38, 30, 8, 8);
+    display_sendChar(&console_font_8x8[(':')*8], invertImages, 46, 30, 8, 8);
+    display_sendNumber(min / 10, invertImages, 54, 30, 8, 8);
+    display_sendNumber(min % 10, invertImages, 62, 30, 8, 8);
+    display_sendChar(&console_font_8x8[(':')*8], invertImages, 70, 30, 8, 8);
+    display_sendNumber(sec / 10, invertImages, 78, 30, 8, 8);
+    display_sendNumber(sec % 10, invertImages, 86, 30, 8, 8);
 }
 
 void enterState_TEMPERATURE(void) {
     display_sendImage(image_blank, invertImages);
-    //float temp = temp_sensor_getTemperature();
-    display_sendNumber( 27 / 10, invertImages, 30, 30, 8, 8);
-    display_sendNumber( 27 % 10, invertImages, 37, 30, 8, 8);
+
+    DHT11_init(TEMP_SENSOR_GPIO);
+    int temp = DHT11_read().temperature;
+    int hum = DHT11_read().humidity;
+    printf("Temperature is %d \n", DHT11_read().temperature);
+    printf("Humidity is %d\n", DHT11_read().humidity);
+    printf("Status code is %d\n", DHT11_read().status);
+
+    display_sendChar(&console_font_8x8[('T')*8], invertImages, 0+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('e')*8], invertImages, 8+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('m')*8], invertImages, 16+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('p')*8], invertImages, 24+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('e')*8], invertImages, 32+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('r')*8], invertImages, 40+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('a')*8], invertImages, 48+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('t')*8], invertImages, 56+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('u')*8], invertImages, 64+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('r')*8], invertImages, 72+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[('e')*8], invertImages, 80+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[(':')*8], invertImages, 88+2, 10, 8, 8);
+
+    display_sendNumber( temp / 10, invertImages, 96+2, 10, 8, 8);
+    display_sendNumber( temp % 10, invertImages, 104+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[(0x100)*8], invertImages, 112+2, 10, 8, 8);
+    display_sendChar(&console_font_8x8[(0x43)*8], invertImages, 120+2, 10, 8, 8);
+
+    display_sendChar(&console_font_8x8[('H')*8], invertImages, 0+2, 30, 8, 8);
+    display_sendChar(&console_font_8x8[('u')*8], invertImages, 8+2, 30, 8, 8);
+    display_sendChar(&console_font_8x8[('m')*8], invertImages, 16+2, 30, 8, 8);
+    display_sendChar(&console_font_8x8[('i')*8], invertImages, 24+2, 30, 8, 8);
+    display_sendChar(&console_font_8x8[('d')*8], invertImages, 32+2, 30, 8, 8);
+    display_sendChar(&console_font_8x8[('i')*8], invertImages, 40+2, 30, 8, 8);
+    display_sendChar(&console_font_8x8[('t')*8], invertImages, 48+2, 30, 8, 8);
+    display_sendChar(&console_font_8x8[('y')*8], invertImages, 56+2, 30, 8, 8);
+    display_sendChar(&console_font_8x8[(':')*8], invertImages, 64+2, 30, 8, 8);
+
+    display_sendNumber( hum / 10, invertImages, 72+2, 30, 8, 8);
+    display_sendNumber( hum % 10, invertImages, 80+2, 30, 8, 8);
+    display_sendChar(&console_font_8x8[(0x25)*8], invertImages, 88+2, 30, 8, 8);
 }
 
 void enterState_3(void) {
-    display_sendImage(image_spyroLogo7, invertImages);
+    display_sendImage(image_spyroLogo11, true);
 }
 
 void enterState_4(void) {
-    display_sendImage(image_spyroLogo11, invertImages);
+    display_sendImage(image_blank, invertImages);
+    display_sendChar(image_spyroQRcode, false, 32, 0, 64, 64);
 }
 
 void inputHandler(int input) {
