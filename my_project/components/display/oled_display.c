@@ -21,6 +21,9 @@ SSD1306_t dev;
 uint8_t buff[1024];
 
 void display_sendImage(uint8_t * image, bool invertImages);
+void display_invertEverythingNow(void) {
+	
+}
 
 void oled_init(void)
 {

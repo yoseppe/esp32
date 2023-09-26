@@ -19,106 +19,206 @@
 
 static const char *TAG = "TEMP_SENSOR";
 
-#if CONFIG_IDF_TARGET_ESP32
-#define EXAMPLE_ADC1_CHAN2 ADC_CHANNEL_4
-#define EXAMPLE_ADC_ATTEN ADC_ATTEN_DB_11
-#endif
-
-static int adc_raw;
-static int voltage;
-static bool example_adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t atten, adc_cali_handle_t *out_handle);
-static void example_adc_calibration_deinit(adc_cali_handle_t handle);
-
-adc_oneshot_unit_handle_t adc1_handle2;
+#define TEMP_SENSOR_GPIO GPIO_NUM_19
 
 void temp_sensor_init(void)
 {
-
-    //-------------ADC1 Init---------------//
-    adc_oneshot_unit_init_cfg_t init_config2 = {
-        .unit_id = ADC_UNIT_2,
-    };
-    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config2, &adc1_handle2));
-
-    //-------------ADC1 Config---------------//
-    adc_oneshot_chan_cfg_t config2 = {
-        .bitwidth = ADC_BITWIDTH_DEFAULT,
-        .atten = EXAMPLE_ADC_ATTEN,
-    };
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle2, EXAMPLE_ADC1_CHAN2, &config2));
-
-    //-------------ADC1 Calibration Init---------------//
-    adc_cali_handle_t adc1_cali_chan2_handle = NULL;
-    bool do_calibration1_chan2 = example_adc_calibration_init(ADC_UNIT_2, EXAMPLE_ADC1_CHAN2, EXAMPLE_ADC_ATTEN, &adc1_cali_chan2_handle);
+    gpio_reset_pin(TEMP_SENSOR_GPIO);
+    gpio_set_direction(TEMP_SENSOR_GPIO, GPIO_MODE_INPUT);
 }
 
-float temp_sensor_getTemperature(void) {
-    ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle2, EXAMPLE_ADC1_CHAN2, &adc_raw));
-    ESP_LOGI(TAG, "raw X: %d", adc_raw);
+float temp_sensor_getTemperature(void) {    
+    //return gpio_get_level(TEMP_SENSOR_GPIO);
 
-    return (float)27;
+
 }
 
-/*---------------------------------------------------------------
-        ADC Calibration
----------------------------------------------------------------*/
-static bool example_adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t atten, adc_cali_handle_t *out_handle)
+struct _DHT DHT()
 {
-    adc_cali_handle_t handle = NULL;
-    esp_err_t ret = ESP_FAIL;
-    bool calibrated = false;
 
-#if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
-    if (!calibrated) {
-        ESP_LOGI(TAG, "calibration scheme version is %s", "Curve Fitting");
-        adc_cali_curve_fitting_config_t cali_config = {
-            .unit_id = unit,
-            .chan = channel,
-            .atten = atten,
-            .bitwidth = ADC_BITWIDTH_DEFAULT,
-        };
-        ret = adc_cali_create_scheme_curve_fitting(&cali_config, &handle);
-        if (ret == ESP_OK) {
-            calibrated = true;
-        }
-    }
-#endif
+	DHTgpio = (gpio_num_t) 19;
+	humidity = 0.;
+	temperature = 0.;
 
-#if ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
-    if (!calibrated) {
-        ESP_LOGI(TAG, "calibration scheme version is %s", "Line Fitting");
-        adc_cali_line_fitting_config_t cali_config = {
-            .unit_id = unit,
-            .atten = atten,
-            .bitwidth = ADC_BITWIDTH_DEFAULT,
-        };
-        ret = adc_cali_create_scheme_line_fitting(&cali_config, &handle);
-        if (ret == ESP_OK) {
-            calibrated = true;
-        }
-    }
-#endif
-
-    *out_handle = handle;
-    if (ret == ESP_OK) {
-        ESP_LOGI(TAG, "Calibration Success");
-    } else if (ret == ESP_ERR_NOT_SUPPORTED || !calibrated) {
-        ESP_LOGW(TAG, "eFuse not burnt, skip software calibration");
-    } else {
-        ESP_LOGE(TAG, "Invalid arg or no memory");
-    }
-
-    return calibrated;
 }
 
-static void example_adc_calibration_deinit(adc_cali_handle_t handle)
-{
-#if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
-    ESP_LOGI(TAG, "deregister %s calibration scheme", "Curve Fitting");
-    ESP_ERROR_CHECK(adc_cali_delete_scheme_curve_fitting(handle));
+// == get temp & hum =============================================
+float DHT::getHumidity() { return humidity; }
+float DHT::getTemperature() { return temperature; }
 
-#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
-    ESP_LOGI(TAG, "deregister %s calibration scheme", "Line Fitting");
-    ESP_ERROR_CHECK(adc_cali_delete_scheme_line_fitting(handle));
-#endif
+// == error handler ===============================================
+
+void DHT::errorHandler(int response)
+{
+	switch(response) {
+
+		case DHT_TIMEOUT_ERROR :
+			//ESP_LOGI( TAG, "Sensor Timeout\n" );
+			printf( "Sensor Timeout\n" );
+			break;
+
+		case DHT_CHECKSUM_ERROR:
+			//ESP_LOGI( TAG, "CheckSum error\n" );
+			printf( "CheckSum error\n" );
+			break;
+
+		case DHT_OK:
+			break;
+
+		default :
+			//ESP_LOGI( TAG, "Unknown error\n" );
+			printf( "Unknown error\n" );
+	}
+}
+
+/*-------------------------------------------------------------------------------
+;
+;	get next state
+;
+;	I don't like this logic. It needs some interrupt blocking / priority
+;	to ensure it runs in realtime.
+;
+;--------------------------------------------------------------------------------*/
+
+int DHT::getSignalLevel( int usTimeOut, bool state )
+{
+
+	int uSec = 0;
+	while( gpio_get_level(DHTgpio)==state ) {
+
+		if( uSec > usTimeOut )
+			return -1;
+
+		++uSec;
+		ets_delay_us(1);		// uSec delay
+	}
+
+	return uSec;
+}
+
+/*----------------------------------------------------------------------------
+;
+;	read DHT22 sensor
+
+	copy/paste from AM2302/DHT22 Docu:
+	DATA: Hum = 16 bits, Temp = 16 Bits, check-sum = 8 Bits
+	Example: MCU has received 40 bits data from AM2302 as
+	0000 0010 1000 1100 0000 0001 0101 1111 1110 1110
+	16 bits RH data + 16 bits T data + check sum
+
+	1) we convert 16 bits RH data from binary system to decimal system, 0000 0010 1000 1100 → 652
+	Binary system Decimal system: RH=652/10=65.2%RH
+	2) we convert 16 bits T data from binary system to decimal system, 0000 0001 0101 1111 → 351
+	Binary system Decimal system: T=351/10=35.1°C
+	When highest bit of temperature is 1, it means the temperature is below 0 degree Celsius.
+	Example: 1000 0000 0110 0101, T= minus 10.1°C: 16 bits T data
+	3) Check Sum=0000 0010+1000 1100+0000 0001+0101 1111=1110 1110 Check-sum=the last 8 bits of Sum=11101110
+
+	Signal & Timings:
+	The interval of whole process must be beyond 2 seconds.
+
+	To request data from DHT:
+	1) Sent low pulse for > 1~10 ms (MILI SEC)
+	2) Sent high pulse for > 20~40 us (Micros).
+	3) When DHT detects the start signal, it will pull low the bus 80us as response signal,
+	   then the DHT pulls up 80us for preparation to send data.
+	4) When DHT is sending data to MCU, every bit's transmission begin with low-voltage-level that last 50us,
+	   the following high-voltage-level signal's length decide the bit is "1" or "0".
+		0: 26~28 us
+		1: 70 us
+;----------------------------------------------------------------------------*/
+
+#define MAXdhtData 5	// to complete 40 = 5*8 Bits
+
+int DHT::readDHT()
+{
+int uSec = 0;
+
+uint8_t dhtData[MAXdhtData];
+uint8_t byteInx = 0;
+uint8_t bitInx = 7;
+
+	for (int k = 0; k<MAXdhtData; k++)
+		dhtData[k] = 0;
+
+	// == Send start signal to DHT sensor ===========
+
+	gpio_set_direction( DHTgpio, GPIO_MODE_OUTPUT );
+
+	// pull down for 3 ms for a smooth and nice wake up
+	gpio_set_level( DHTgpio, 0 );
+	ets_delay_us( 3000 );
+
+	// pull up for 25 us for a gentile asking for data
+	gpio_set_level( DHTgpio, 1 );
+	ets_delay_us( 25 );
+
+	gpio_set_direction( DHTgpio, GPIO_MODE_INPUT );		// change to input mode
+
+	// == DHT will keep the line low for 80 us and then high for 80us ====
+
+	uSec = getSignalLevel( 85, 0 );
+//	ESP_LOGI( TAG, "Response = %d", uSec );
+	if( uSec<0 ) return DHT_TIMEOUT_ERROR;
+
+	// -- 80us up ------------------------
+
+	uSec = getSignalLevel( 85, 1 );
+//	ESP_LOGI( TAG, "Response = %d", uSec );
+	if( uSec<0 ) return DHT_TIMEOUT_ERROR;
+
+	// == No errors, read the 40 data bits ================
+
+	for( int k = 0; k < 40; k++ ) {
+
+		// -- starts new data transmission with >50us low signal
+
+		uSec = getSignalLevel( 56, 0 );
+		if( uSec<0 ) return DHT_TIMEOUT_ERROR;
+
+		// -- check to see if after >70us rx data is a 0 or a 1
+
+		uSec = getSignalLevel( 75, 1 );
+		if( uSec<0 ) return DHT_TIMEOUT_ERROR;
+
+		// add the current read to the output data
+		// since all dhtData array where set to 0 at the start,
+		// only look for "1" (>28us us)
+
+		if (uSec > 40) {
+			dhtData[ byteInx ] |= (1 << bitInx);
+			}
+
+		// index to next byte
+
+		if (bitInx == 0) { bitInx = 7; ++byteInx; }
+		else bitInx--;
+	}
+
+	// == get humidity from Data[0] and Data[1] ==========================
+
+	humidity = dhtData[0];
+	humidity *= 0x100;					// >> 8
+	humidity += dhtData[1];
+	humidity /= 10;						// get the decimal
+
+	// == get temp from Data[2] and Data[3]
+
+	temperature = dhtData[2] & 0x7F;
+	temperature *= 0x100;				// >> 8
+	temperature += dhtData[3];
+	temperature /= 10;
+
+	if( dhtData[2] & 0x80 ) 			// negative temp, brrr it's freezing
+		temperature *= -1;
+
+
+	// == verify if checksum is ok ===========================================
+	// Checksum is the sum of Data 8 bits masked out 0xFF
+
+	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF))
+		return DHT_OK;
+
+	else
+		return DHT_CHECKSUM_ERROR;
 }

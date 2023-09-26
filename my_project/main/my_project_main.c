@@ -34,8 +34,8 @@
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
-#define EXAMPLE_ESP_WIFI_SSID      "Josip P30"
-#define EXAMPLE_ESP_WIFI_PASS      "sipjoicgrg"
+#define EXAMPLE_ESP_WIFI_SSID      "4tel_AP"
+#define EXAMPLE_ESP_WIFI_PASS      "aHp6KM7Y2j8QfTT6"
 #define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
 
 static const char *TAG = "wifi station";
@@ -58,15 +58,15 @@ void app_main(void)
     wifi_init_sta();
 
     oled_init();
-    //display_sendImage(image_menuItem1Selected);
+    display_sendImage(image_menuItem1Selected, false);
 
-    temp_sensor_init();
+    //temp_sensor_init();
 
-    float temp = temp_sensor_getTemperature();
-    ESP_LOGI(TAG, "temp = %f", temp);
+    //float temp = temp_sensor_getTemperature();
+    //ESP_LOGI(TAG, "temp = %f", temp);
 
-    //joystick_init();
-    //joystick_startReadingStates();
+    joystick_init();
+    joystick_startReadingStates();
 
     /*while(1) {
         time_t now;

@@ -189,9 +189,9 @@ void enterState_TIME(void) {
 
 void enterState_TEMPERATURE(void) {
     display_sendImage(image_blank, invertImages);
-    float temp = temp_sensor_getTemperature();
-    display_sendNumber( ((int)temp) / 10, invertImages, 30, 30, 8, 8);
-    display_sendNumber( ((int)temp) % 10, invertImages, 37, 30, 8, 8);
+    //float temp = temp_sensor_getTemperature();
+    display_sendNumber( 27 / 10, invertImages, 30, 30, 8, 8);
+    display_sendNumber( 27 % 10, invertImages, 37, 30, 8, 8);
 }
 
 void enterState_3(void) {
@@ -359,6 +359,7 @@ void joystick_startReadingStates(void) {
         if(gpio_get_level(PHYSICAL_SWITCH_GPIO) == 0) { // if turned ON
             //ESP_LOGI(TAG, "SSSSSSSSSSSSSSSSSSSSSSSSSSWITCH TURNED ON");
             invertImages = true;
+            display_invertEverythingNow();
             //ESP_LOGI(TAG, "bool invertImages = %d", invertImages);
         } else {
             //ESP_LOGI(TAG, "SSSSSSSSSSSSSSSSSSSSSSSSSSWITCH TURNED OFF");
