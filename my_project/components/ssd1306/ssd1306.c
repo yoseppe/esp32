@@ -412,10 +412,10 @@ void ssd1306_wrap_arround(SSD1306_t * dev, ssd1306_scroll_type_t scroll, int sta
 
 void ssd1306_bitmaps(SSD1306_t * dev, int xpos, int ypos, uint8_t * bitmap, int width, int height, bool invert)
 {
-	if ( (width % 8) != 0) {
+	/*if ( (width % 8) != 0) {
 		ESP_LOGE(TAG, "width must be a multiple of 8");
 		return;
-	}
+	}*/
 	int _width = width / 8;
 	uint8_t wk0;
 	uint8_t wk1;

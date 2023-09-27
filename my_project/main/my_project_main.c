@@ -57,13 +57,17 @@ void app_main(void)
     wifi_init_sta();
 
     oled_init();
-    display_sendImage(image_menuItem1Selected, false);
     //image_test128x64square
-    /*display_sendImage(image_test128x64square, false);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    display_sendImage(image_test130x64square, false);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    display_sendImage(image_test132x64square, false);*/
+    /*while(1) {
+    display_sendImageTest(image_blank, false, 132);
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    display_sendImageTest(image_test128x64square, false, 128);
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    display_sendImageTest(image_blankWhite, false, 128);
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    display_sendImageTest(image_testArrows, false, 128);
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    }*/
 
     //temp_sensor_init();
 

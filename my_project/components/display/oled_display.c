@@ -46,6 +46,10 @@ void display_sendImage(uint8_t * image, bool invertImages) {
 	ssd1306_bitmaps(&dev, 0, 0, image, 128, 64, invertImages);
 }
 
+void display_sendImageTest(uint8_t * image, bool invertImages, int xdimension) {
+	ssd1306_bitmaps(&dev, 0+2, 0, image, 128, 64, invertImages);
+}
+
 void spyrosoftLogo_scrollDown(void) {
 ssd1306_bitmaps(&dev, 0, 0, image_spyroLogo_6, 128, 64, false);
 	vTaskDelay(10 / portTICK_PERIOD_MS);

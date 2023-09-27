@@ -21,6 +21,7 @@
 
 //#include "temp_sensor.h"
 #include "v2.h"
+#include "sound_sensor.h"
 
 static const char *TAG = "JOYSTICK";
 
@@ -152,8 +153,9 @@ void enterState_TIME(void) {
     int min = timeinfo.tm_min;
     int sec = timeinfo.tm_sec;
     int day = timeinfo.tm_mday;
-    int month = timeinfo.tm_mon;
-    int year = timeinfo.tm_year;
+    int weekDay = timeinfo.tm_wday;
+    int month = timeinfo.tm_mon+1;
+    int year = timeinfo.tm_year+1900;
 
     ESP_LOGI(TAG, "Hours: %d", hour);
     ESP_LOGI(TAG, "Minutes: %d", min);
@@ -165,16 +167,18 @@ void enterState_TIME(void) {
 
     display_sendImage(image_blank, invertImages);
 
+
+
     display_sendNumber(day / 10, invertImages, 20, 10, 8, 8);
     display_sendNumber(day % 10, invertImages, 28, 10, 8, 8);
     display_sendChar(&console_font_8x8[('.')*8], invertImages, 36, 10, 8, 8);
     display_sendNumber(month / 10, invertImages, 44, 10, 8, 8);
     display_sendNumber(month % 10, invertImages, 52, 10, 8, 8);
     display_sendChar(&console_font_8x8[('.')*8], invertImages, 60, 10, 8, 8);
-    display_sendNumber(2, invertImages, 68, 10, 8, 8);
-    display_sendNumber(0, invertImages, 76, 10, 8, 8);
-    display_sendNumber(2, invertImages, 84, 10, 8, 8);
-    display_sendNumber(3, invertImages, 92, 10, 8, 8);
+    display_sendNumber(year / 1000, invertImages, 68, 10, 8, 8);
+    display_sendNumber(year / 100 % 10, invertImages, 76, 10, 8, 8);
+    display_sendNumber(year / 10 % 100, invertImages, 84, 10, 8, 8);
+    display_sendNumber(year % 10, invertImages, 92, 10, 8, 8);
     display_sendChar(&console_font_8x8[('.')*8], invertImages, 100, 10, 8, 8);
 
     display_sendNumber(hour / 10, invertImages, 30, 30, 8, 8);
@@ -193,6 +197,8 @@ void enterState_TEMPERATURE(void) {
     DHT11_init(TEMP_SENSOR_GPIO);
     int temp = DHT11_read().temperature;
     int hum = DHT11_read().humidity;
+
+    if(temp) 
     printf("Temperature is %d \n", DHT11_read().temperature);
     printf("Humidity is %d\n", DHT11_read().humidity);
     printf("Status code is %d\n", DHT11_read().status);
@@ -230,11 +236,35 @@ void enterState_TEMPERATURE(void) {
     display_sendChar(&console_font_8x8[(0x25)*8], invertImages, 88+2, 30, 8, 8);
 }
 
-void enterState_3(void) {
-    display_sendImage(image_spyroLogo11, true);
+void enterState_3(void) { // SOUND
+    display_sendImage(image_blank, invertImages);
+    sound_sensor_init();
+    enum before {
+        DETECTED,
+        LISTENING
+    };
+    enum before lastState = LISTENING;
+    while(1) {
+        if(sound_sensor_digital_readOnce() == 1) {
+            if(lastState == LISTENING) {
+                ESP_LOGI(TAG, "CHANGED MODE FROM LISTENING TO DETECTEDDDDDDDDDDDDDDDDDD+++++++++");
+                display_sendImage(image_soundDetected, invertImages);
+                lastState = DETECTED;
+                //vTaskDelay(pdMS_TO_TICKS(5));
+            }
+        } else {
+            if(lastState == DETECTED) {
+                ESP_LOGI(TAG, "CHANGED MODE FROM DETECTED TO LISTENINGGGGGGGGGGGGGGGGGG--------");
+                display_sendImage(image_blank, invertImages);
+                lastState = LISTENING;
+                //vTaskDelay(pdMS_TO_TICKS(5));
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
 }
 
-void enterState_4(void) {
+void enterState_4(void) { // QR CODE
     display_sendImage(image_blank, invertImages);
     display_sendChar(image_spyroQRcode, false, 32, 0, 64, 64);
 }
