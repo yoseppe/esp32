@@ -30,11 +30,17 @@ static const char *TAG = "JOYSTICK";
 #define PHYSICAL_SWITCH_GPIO GPIO_NUM_18
 #define BUZZER_GPIO GPIO_NUM_2
 
+#define LED_RED_GPIO GPIO_NUM_27
+#define LED_GREEN_GPIO GPIO_NUM_26
+#define LED_BLUE_GPIO GPIO_NUM_25
+
 #if CONFIG_IDF_TARGET_ESP32
 #define EXAMPLE_ADC1_CHAN0 ADC_CHANNEL_6
 #define EXAMPLE_ADC1_CHAN1 ADC_CHANNEL_7
 #define EXAMPLE_ADC_ATTEN ADC_ATTEN_DB_11
 #endif
+
+void inputHandler(int input);
 
 //=============================================================================================
 //=====================TIME INJECTED FROM MAIN=================================================
@@ -147,6 +153,7 @@ void display_sendLetter(char letter, bool invertImages, int xpos, int ypos, int 
 }
 
 void enterState_TIME(void) {
+    display_sendImage(image_blank, invertImages);
     updateTime();
     ESP_LOGI(TAG, "The current date/time in Zagreb is: %s", strftime_buf);
 
@@ -164,11 +171,6 @@ void enterState_TIME(void) {
     ESP_LOGI(TAG, "Day: %d", day);
     ESP_LOGI(TAG, "Month: %d", month);
     ESP_LOGI(TAG, "Year: %d", year);
-
-
-    display_sendImage(image_blank, invertImages);
-
-
 
     display_sendNumber(day / 10, invertImages, 20, 10, 8, 8);
     display_sendNumber(day % 10, invertImages, 28, 10, 8, 8);
@@ -240,30 +242,68 @@ void enterState_TEMPERATURE(void) {
     display_sendChar(&console_font_8x8[(0x25)*8], invertImages, 88+2, 30, 8, 8);
 }
 
+enum rgb_color {
+    OFF,
+    RED,
+    GREEN,
+    BLUE
+};
+enum rgb_color ledCurrentColor = OFF;
+void led_rgb_setNextColor(int previousColor) {
+    switch(previousColor) {
+        case OFF:
+            gpio_set_level(LED_RED_GPIO, 1);
+            ledCurrentColor = RED;
+        break;
+        case RED:
+            gpio_set_level(LED_RED_GPIO, 0);
+            gpio_set_level(LED_GREEN_GPIO, 1);
+            ledCurrentColor = GREEN;
+        break;
+        case GREEN:
+            gpio_set_level(LED_GREEN_GPIO, 0);
+            gpio_set_level(LED_BLUE_GPIO, 1);
+            ledCurrentColor = BLUE;
+        break;
+        case BLUE:
+            gpio_set_level(LED_BLUE_GPIO, 0);
+            ledCurrentColor = OFF;
+        break;
+        default:
+        break;
+    }
+}
+
 void enterState_3(void) { // SOUND
-    display_sendImage(image_blank, invertImages);
+    display_sendImage(image_soundDetected, invertImages);
     sound_sensor_init();
     enum before {
         DETECTED,
         LISTENING
     };
     enum before lastState = LISTENING;
-    while(1) {
-        if(sound_sensor_digital_readOnce() == 1) {
-            if(lastState == LISTENING) {
-                ESP_LOGI(TAG, "CHANGED MODE FROM LISTENING TO DETECTEDDDDDDDDDDDDDDDDDD+++++++++");
-                display_sendImage(image_soundDetected, invertImages);
-                lastState = DETECTED;
+    bool leftArrowPressed = false;
+    while(leftArrowPressed == false) {
+        while((sound_sensor_digital_readOnce() == 0) && (leftArrowPressed == false)) {
+            ESP_LOGI(TAG, "LISTENING............................");
+            ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN1, &adc_raw[1]));
+            ESP_LOGI(TAG, "IS LEFT ARROW PRESSED?");
+            ESP_LOGI(TAG, "X AXIS RAW: %d", adc_raw[1]);
+            if(adc_raw[1] <= 1000) {
+                leftArrowPressed = true;
+                gpio_set_level(BUZZER_GPIO, 1);
+                vTaskDelay(pdMS_TO_TICKS(20));
+                gpio_set_level(BUZZER_GPIO, 0);
+                ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
+                //display_sendImage(image_leftArrow);
             }
-        } else {
-            if(lastState == DETECTED) {
-                ESP_LOGI(TAG, "CHANGED MODE FROM DETECTED TO LISTENINGGGGGGGGGGGGGGGGGG--------");
-                display_sendImage(image_blank, invertImages);
-                lastState = LISTENING;
-            }
+            ESP_LOGI(TAG, "NO");
         }
-        vTaskDelay(pdMS_TO_TICKS(5));
+        ESP_LOGI(TAG, "DETECTED++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        led_rgb_setNextColor(ledCurrentColor);
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
+    inputHandler(INPUT_LEFT_ARROW);
 }
 
 void enterState_4(void) { // QR CODE
@@ -394,11 +434,19 @@ void joystick_init(void)
     gpio_set_direction(PHYSICAL_SWITCH_GPIO, GPIO_MODE_INPUT);
     // END PHYSICAL SWITCH CONFIG
 
-    
     // BUZZER CONFIG
     gpio_reset_pin(BUZZER_GPIO);
     gpio_set_direction(BUZZER_GPIO, GPIO_MODE_OUTPUT);
     // BUZZER SWITCH CONFIG
+
+    // RGB LED CONFIG
+    gpio_reset_pin(LED_RED_GPIO);
+    gpio_reset_pin(LED_GREEN_GPIO);
+    gpio_reset_pin(LED_GREEN_GPIO);
+    gpio_set_direction(LED_RED_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_direction(LED_GREEN_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_direction(LED_BLUE_GPIO, GPIO_MODE_OUTPUT);
+    // RGB LED CONFIG
 
     //-------------ADC1 Init---------------//
     adc_oneshot_unit_init_cfg_t init_config1 = {
