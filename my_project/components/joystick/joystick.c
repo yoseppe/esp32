@@ -28,6 +28,7 @@ static const char *TAG = "JOYSTICK";
 #define TEMP_SENSOR_GPIO GPIO_NUM_19
 #define PUSH_BUTTON_GPIO GPIO_NUM_5
 #define PHYSICAL_SWITCH_GPIO GPIO_NUM_18
+#define BUZZER_GPIO GPIO_NUM_2
 
 #if CONFIG_IDF_TARGET_ESP32
 #define EXAMPLE_ADC1_CHAN0 ADC_CHANNEL_6
@@ -198,7 +199,10 @@ void enterState_TEMPERATURE(void) {
     int temp = DHT11_read().temperature;
     int hum = DHT11_read().humidity;
 
-    if(temp) 
+    while(temp < 0 || hum < 0) {
+        temp = DHT11_read().temperature;
+        hum = DHT11_read().humidity;
+    } 
     printf("Temperature is %d \n", DHT11_read().temperature);
     printf("Humidity is %d\n", DHT11_read().humidity);
     printf("Status code is %d\n", DHT11_read().status);
@@ -250,14 +254,12 @@ void enterState_3(void) { // SOUND
                 ESP_LOGI(TAG, "CHANGED MODE FROM LISTENING TO DETECTEDDDDDDDDDDDDDDDDDD+++++++++");
                 display_sendImage(image_soundDetected, invertImages);
                 lastState = DETECTED;
-                //vTaskDelay(pdMS_TO_TICKS(5));
             }
         } else {
             if(lastState == DETECTED) {
                 ESP_LOGI(TAG, "CHANGED MODE FROM DETECTED TO LISTENINGGGGGGGGGGGGGGGGGG--------");
                 display_sendImage(image_blank, invertImages);
                 lastState = LISTENING;
-                //vTaskDelay(pdMS_TO_TICKS(5));
             }
         }
         vTaskDelay(pdMS_TO_TICKS(5));
@@ -392,6 +394,12 @@ void joystick_init(void)
     gpio_set_direction(PHYSICAL_SWITCH_GPIO, GPIO_MODE_INPUT);
     // END PHYSICAL SWITCH CONFIG
 
+    
+    // BUZZER CONFIG
+    gpio_reset_pin(BUZZER_GPIO);
+    gpio_set_direction(BUZZER_GPIO, GPIO_MODE_OUTPUT);
+    // BUZZER SWITCH CONFIG
+
     //-------------ADC1 Init---------------//
     adc_oneshot_unit_init_cfg_t init_config1 = {
         .unit_id = ADC_UNIT_1,
@@ -426,7 +434,7 @@ void joystick_startReadingStates(void) {
         if(gpio_get_level(PHYSICAL_SWITCH_GPIO) == 0) { // if turned ON
             //ESP_LOGI(TAG, "SSSSSSSSSSSSSSSSSSSSSSSSSSWITCH TURNED ON");
             invertImages = true;
-            display_invertEverythingNow();
+            //display_invertEverythingNow();
             //ESP_LOGI(TAG, "bool invertImages = %d", invertImages);
         } else {
             //ESP_LOGI(TAG, "SSSSSSSSSSSSSSSSSSSSSSSSSSWITCH TURNED OFF");
@@ -439,6 +447,9 @@ void joystick_startReadingStates(void) {
             cnt = 0;
         } else {
             if(gpio_get_level(PUSH_BUTTON_GPIO) == 0) {
+                gpio_set_level(BUZZER_GPIO, 1);
+                vTaskDelay(pdMS_TO_TICKS(20));
+                gpio_set_level(BUZZER_GPIO, 0);
                 cnt = 0;
                 ESP_LOGI(TAG, "oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobuttonPUSH");
                 //display_sendImage(image_buttonPushed);
@@ -449,6 +460,9 @@ void joystick_startReadingStates(void) {
                 ESP_LOGI(TAG, "================================================================================centre");
             }
             else if(adc_raw[0] <= 1000) {
+                gpio_set_level(BUZZER_GPIO, 1);
+                vTaskDelay(pdMS_TO_TICKS(20));
+                gpio_set_level(BUZZER_GPIO, 0);
                 cnt = 0;
                 ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
                 //display_sendImage(image_leftArrow);
@@ -460,6 +474,9 @@ void joystick_startReadingStates(void) {
                 ESP_LOGI(TAG, "================================================================================centre");
             }
             else if(adc_raw[0] >= 3500) {
+                gpio_set_level(BUZZER_GPIO, 1);
+                vTaskDelay(pdMS_TO_TICKS(20));
+                gpio_set_level(BUZZER_GPIO, 0);
                 cnt = 0;
                 ESP_LOGI(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RIGHT");
                 //display_sendImage(image_rightArrow);
@@ -471,6 +488,9 @@ void joystick_startReadingStates(void) {
                 ESP_LOGI(TAG, "================================================================================centre");
             }
             else if(adc_raw[1] <= 500) {
+                gpio_set_level(BUZZER_GPIO, 1);
+                vTaskDelay(pdMS_TO_TICKS(20));
+                gpio_set_level(BUZZER_GPIO, 0);
                 cnt = 0;
                 ESP_LOGI(TAG, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^UP");
                 //display_sendImage(image_upArrow);
@@ -482,6 +502,9 @@ void joystick_startReadingStates(void) {
                 ESP_LOGI(TAG, "================================================================================centre");
             }
             else if(adc_raw[1] >= 4000) {
+                gpio_set_level(BUZZER_GPIO, 1);
+                vTaskDelay(pdMS_TO_TICKS(20));
+                gpio_set_level(BUZZER_GPIO, 0);
                 cnt = 0;
                 ESP_LOGI(TAG, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||DOWN");
                 //display_sendImage(image_downArrow);
