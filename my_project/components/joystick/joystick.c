@@ -43,7 +43,7 @@ static const char *TAG = "JOYSTICK";
 void buzzer_buzzFor(int duration) {
     gpio_set_level(BUZZER_GPIO, 1);
     vTaskDelay(pdMS_TO_TICKS(duration));
-    gpio_set_level(BUZZER_GPIO, 1);
+    gpio_set_level(BUZZER_GPIO, 0);
 }
 
 void inputHandler(int input);
@@ -179,25 +179,44 @@ void enterState_TIME(void) {
     ESP_LOGI(TAG, "Year: %d", year);
 
     display_sendNumber(day / 10, invertImages, 20, 10, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(day % 10, invertImages, 28, 10, 8, 8);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('.')*8], invertImages, 36, 10, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(month / 10, invertImages, 44, 10, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(month % 10, invertImages, 52, 10, 8, 8);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('.')*8], invertImages, 60, 10, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(year / 1000, invertImages, 68, 10, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(year / 100 % 10, invertImages, 76, 10, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(year / 10 % 100, invertImages, 84, 10, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(year % 10, invertImages, 92, 10, 8, 8);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('.')*8], invertImages, 100, 10, 8, 8);
+    buzzer_buzzFor(15);
 
     display_sendNumber(hour / 10, invertImages, 30, 30, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(hour % 10, invertImages, 38, 30, 8, 8);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[(':')*8], invertImages, 46, 30, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(min / 10, invertImages, 54, 30, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(min % 10, invertImages, 62, 30, 8, 8);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[(':')*8], invertImages, 70, 30, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(sec / 10, invertImages, 78, 30, 8, 8);
+    buzzer_buzzFor(15);
     display_sendNumber(sec % 10, invertImages, 86, 30, 8, 8);
+    buzzer_buzzFor(15);
 }
 
 void enterState_TEMPERATURE(void) {
@@ -216,64 +235,64 @@ void enterState_TEMPERATURE(void) {
     printf("Status code is %d\n", DHT11_read().status);
 
     display_sendChar(&console_font_8x8[('T')*8], invertImages, 0+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('e')*8], invertImages, 8+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('m')*8], invertImages, 16+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('p')*8], invertImages, 24+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('e')*8], invertImages, 32+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('r')*8], invertImages, 40+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('a')*8], invertImages, 48+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('t')*8], invertImages, 56+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('u')*8], invertImages, 64+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('r')*8], invertImages, 72+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('e')*8], invertImages, 80+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[(':')*8], invertImages, 88+2, 10, 8, 8);
-    buzzer_buzzFor(10);v
+    buzzer_buzzFor(15);
 
     display_sendNumber( temp / 10, invertImages, 96+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendNumber( temp % 10, invertImages, 104+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[(0x100)*8], invertImages, 112+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[(0x43)*8], invertImages, 120+2, 10, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
 
     display_sendChar(&console_font_8x8[('H')*8], invertImages, 0+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('u')*8], invertImages, 8+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('m')*8], invertImages, 16+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('i')*8], invertImages, 24+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('d')*8], invertImages, 32+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('i')*8], invertImages, 40+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('t')*8], invertImages, 48+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[('y')*8], invertImages, 56+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[(':')*8], invertImages, 64+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
 
     display_sendNumber( hum / 10, invertImages, 72+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendNumber( hum % 10, invertImages, 80+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
     display_sendChar(&console_font_8x8[(0x25)*8], invertImages, 88+2, 30, 8, 8);
-    buzzer_buzzFor(10);
+    buzzer_buzzFor(15);
 }
 
 enum rgb_color {
@@ -335,6 +354,10 @@ void enterState_3(void) { // SOUND
         led_rgb_setNextColor(ledCurrentColor);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
+
+    gpio_set_level(LED_GREEN_GPIO, 0);
+    gpio_set_level(LED_BLUE_GPIO, 0);
+    gpio_set_level(LED_RED_GPIO, 0);
     inputHandler(INPUT_LEFT_ARROW);
 }
 
@@ -563,7 +586,7 @@ void joystick_startReadingStates(void) {
                 ESP_LOGI(TAG, "================================================================================centre");
             }
             else if(adc_raw[1] <= 500) {
-                buzzer_buzzFor(20);s
+                buzzer_buzzFor(20);
                 cnt = 0;
                 ESP_LOGI(TAG, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^UP");
                 //display_sendImage(image_upArrow);
