@@ -40,6 +40,12 @@ static const char *TAG = "JOYSTICK";
 #define EXAMPLE_ADC_ATTEN ADC_ATTEN_DB_11
 #endif
 
+void buzzer_buzzFor(int duration) {
+    gpio_set_level(BUZZER_GPIO, 1);
+    vTaskDelay(pdMS_TO_TICKS(duration));
+    gpio_set_level(BUZZER_GPIO, 1);
+}
+
 void inputHandler(int input);
 
 //=============================================================================================
@@ -210,36 +216,64 @@ void enterState_TEMPERATURE(void) {
     printf("Status code is %d\n", DHT11_read().status);
 
     display_sendChar(&console_font_8x8[('T')*8], invertImages, 0+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('e')*8], invertImages, 8+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('m')*8], invertImages, 16+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('p')*8], invertImages, 24+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('e')*8], invertImages, 32+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('r')*8], invertImages, 40+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('a')*8], invertImages, 48+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('t')*8], invertImages, 56+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('u')*8], invertImages, 64+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('r')*8], invertImages, 72+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('e')*8], invertImages, 80+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[(':')*8], invertImages, 88+2, 10, 8, 8);
+    buzzer_buzzFor(10);v
 
     display_sendNumber( temp / 10, invertImages, 96+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendNumber( temp % 10, invertImages, 104+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[(0x100)*8], invertImages, 112+2, 10, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[(0x43)*8], invertImages, 120+2, 10, 8, 8);
+    buzzer_buzzFor(10);
 
     display_sendChar(&console_font_8x8[('H')*8], invertImages, 0+2, 30, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('u')*8], invertImages, 8+2, 30, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('m')*8], invertImages, 16+2, 30, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('i')*8], invertImages, 24+2, 30, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('d')*8], invertImages, 32+2, 30, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('i')*8], invertImages, 40+2, 30, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('t')*8], invertImages, 48+2, 30, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[('y')*8], invertImages, 56+2, 30, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[(':')*8], invertImages, 64+2, 30, 8, 8);
+    buzzer_buzzFor(10);
 
     display_sendNumber( hum / 10, invertImages, 72+2, 30, 8, 8);
+    buzzer_buzzFor(10);
     display_sendNumber( hum % 10, invertImages, 80+2, 30, 8, 8);
+    buzzer_buzzFor(10);
     display_sendChar(&console_font_8x8[(0x25)*8], invertImages, 88+2, 30, 8, 8);
+    buzzer_buzzFor(10);
 }
 
 enum rgb_color {
@@ -291,9 +325,7 @@ void enterState_3(void) { // SOUND
             ESP_LOGI(TAG, "X AXIS RAW: %d", adc_raw[1]);
             if(adc_raw[1] <= 1000) {
                 leftArrowPressed = true;
-                gpio_set_level(BUZZER_GPIO, 1);
-                vTaskDelay(pdMS_TO_TICKS(20));
-                gpio_set_level(BUZZER_GPIO, 0);
+                buzzer_buzzFor(20);
                 ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
                 //display_sendImage(image_leftArrow);
             }
@@ -309,6 +341,7 @@ void enterState_3(void) { // SOUND
 void enterState_4(void) { // QR CODE
     display_sendImage(image_blank, invertImages);
     display_sendChar(image_spyroQRcode, false, 32, 0, 64, 64);
+    buzzer_buzzFor(300);
 }
 
 void inputHandler(int input) {
@@ -495,9 +528,7 @@ void joystick_startReadingStates(void) {
             cnt = 0;
         } else {
             if(gpio_get_level(PUSH_BUTTON_GPIO) == 0) {
-                gpio_set_level(BUZZER_GPIO, 1);
-                vTaskDelay(pdMS_TO_TICKS(20));
-                gpio_set_level(BUZZER_GPIO, 0);
+                buzzer_buzzFor(20);
                 cnt = 0;
                 ESP_LOGI(TAG, "oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobuttonPUSH");
                 //display_sendImage(image_buttonPushed);
@@ -508,9 +539,7 @@ void joystick_startReadingStates(void) {
                 ESP_LOGI(TAG, "================================================================================centre");
             }
             else if(adc_raw[0] <= 1000) {
-                gpio_set_level(BUZZER_GPIO, 1);
-                vTaskDelay(pdMS_TO_TICKS(20));
-                gpio_set_level(BUZZER_GPIO, 0);
+                buzzer_buzzFor(20);
                 cnt = 0;
                 ESP_LOGI(TAG, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<LEFT");
                 //display_sendImage(image_leftArrow);
@@ -522,9 +551,7 @@ void joystick_startReadingStates(void) {
                 ESP_LOGI(TAG, "================================================================================centre");
             }
             else if(adc_raw[0] >= 3500) {
-                gpio_set_level(BUZZER_GPIO, 1);
-                vTaskDelay(pdMS_TO_TICKS(20));
-                gpio_set_level(BUZZER_GPIO, 0);
+                buzzer_buzzFor(20);
                 cnt = 0;
                 ESP_LOGI(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RIGHT");
                 //display_sendImage(image_rightArrow);
@@ -536,9 +563,7 @@ void joystick_startReadingStates(void) {
                 ESP_LOGI(TAG, "================================================================================centre");
             }
             else if(adc_raw[1] <= 500) {
-                gpio_set_level(BUZZER_GPIO, 1);
-                vTaskDelay(pdMS_TO_TICKS(20));
-                gpio_set_level(BUZZER_GPIO, 0);
+                buzzer_buzzFor(20);s
                 cnt = 0;
                 ESP_LOGI(TAG, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^UP");
                 //display_sendImage(image_upArrow);
@@ -550,9 +575,7 @@ void joystick_startReadingStates(void) {
                 ESP_LOGI(TAG, "================================================================================centre");
             }
             else if(adc_raw[1] >= 4000) {
-                gpio_set_level(BUZZER_GPIO, 1);
-                vTaskDelay(pdMS_TO_TICKS(20));
-                gpio_set_level(BUZZER_GPIO, 0);
+                buzzer_buzzFor(20);
                 cnt = 0;
                 ESP_LOGI(TAG, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||DOWN");
                 //display_sendImage(image_downArrow);
